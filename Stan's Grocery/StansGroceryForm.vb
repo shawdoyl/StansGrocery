@@ -6,162 +6,208 @@
 
 Option Strict On
 Option Explicit On
+Option Compare Text
 
+Imports System.Text.RegularExpressions
 Public Class StansGroceryForm
-    'create array with 15 total items (3 aisles, 5 items per aisle)
-    Dim itemArray(2, 4) As String
+    Dim finalarray2(255, 2), sortedLocations(16), sortedCategories(23) As String
 
-    Private Sub StansGroceryForm_Load(sender As Object, e As EventArgs) Handles Me.Load
-        'create and load file
-        'TODO
-        Dim file As String = "..\..\Grocery.txt"
+    Public Sub StansGroceryForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        'This group of text handles the initial splash screen.
+        Timer1.Start()
+        SplashScreenForm.BackgroundImageLayout = ImageLayout.Stretch
+        'SplashScreenForm.BackgroundImage = My.Resources.stansDraft2
+        'SplashScreenForm.Size = Me.Size
+        'SplashScreenForm.Show()
+        Me.Show()
 
-        'use a loop to continually add items from the file to array until the end is reached
-        'keep track of aisle count and item count to know where to put next item
-        Dim aisleNumber As Integer = 0
-        Dim itemNumber As Integer = 0
+        Dim sizer, foodSizer, locationSizer, categorySizer As Integer
+        Dim match As Match
+        Dim initialSplit As String = Regex.Replace(My.Resources.Resource1.Grocery, "/", "Ω")
+        Dim initialArray As String() = Regex.Split(initialSplit, "\p{P}|\p{Sc}")
+        Dim initialArrayString As String = String.Join("", initialArray)
+        Dim alphabetizer() As String
+        alphabetizer = Regex.Split(initialArrayString, vbLf)
+        array.Sort(alphabetizer)
+        Dim sortedStr As String = String.Join("", alphabetizer)
+        Dim array1() As String
 
-        'open file to be read into array
-        FileOpen(1, file, OpenMode.Input)
+        'Uses a zero width positive lookbehind assertion to split the array back 
+        'into Single lines to prepare for matching
+        array1 = Regex.Split(sortedStr, "(?=ITM)|(?=LOC)|(?=CAT)")
 
-
-        Do While Not EOF(1)
-            'loop starts with aisle = 0, item = 0
-            itemArray(aisleNumber, itemNumber) = LineInput(1)
-            ComboBox1.Items.Add(itemArray(aisleNumber, itemNumber))
-            DisplayListBox.Items.Add(itemArray(aisleNumber, itemNumber))
-            If itemNumber < 4 Then
-                itemNumber += 1
-            ElseIf itemNumber = 4 Then
-                itemNumber = 0
-                aisleNumber += 1
+        'This section sizes the array columns and loads them with information from the first arr.
+        For i = 0 To UBound(array1)
+            match = Regex.Match(array1(i), "ITM")
+            If match.Success = True Then
+                sizer += 1
             End If
-        Loop
-        FileClose(1)
-        DisplayLabel.Text = "Please select an item from the list or the drop" &
-            " menu to see its location, or search for an item."
+        Next
+        Dim finalArray(sizer - 1, 2) As String
+        'Food
+        foodSizer = 0
+        For p = 0 To UBound(array1)
+            match = Regex.Match(array1(p), "ITM")
+            If match.Success = True Then
+                finalArray(foodSizer, 0) = array1(p)
+                foodSizer += 1
+            End If
+        Next
+        'Location
+        locationSizer = 0
+        For k = 0 To UBound(array1)
+            match = Regex.Match(array1(k), "LOC")
+            If match.Success = True Then
+                finalArray(locationSizer, 1) = array1(k)
+                locationSizer += 1
+            End If
+        Next
+        Console.Read()
+        'Categories
+        categorySizer = 0
+        For r = 0 To UBound(array1)
+            match = Regex.Match(array1(r), "CAT")
+            If match.Success = True Then
+                finalArray(categorySizer, 2) = array1(r)
+                categorySizer += 1
+            End If
+        Next
+        'This puts the /'s back where they belong, and removes the tags.
+        For j = 0 To (sizer - 1)
+            For p = 0 To 2
+                finalArray(j, p) = Regex.Replace(finalArray(j, p), "Ω", "/")
+                finalArray(j, p) = Regex.Replace(finalArray(j, p), "ITM", String.Empty)
+                finalArray(j, p) = Regex.Replace(finalArray(j, p), "LOC", String.Empty).PadLeft(2)
+                finalArray(j, p) = Regex.Replace(finalArray(j, p), "CAT", String.Empty)
+            Next
+            DisplayListBox.Items.Add(finalArray(j, 0))
+        Next
+        'moved the array's information to a global array, this array needs global access
+        finalarray2 = finalArray
+        LocationSorter()
+        CategorySorter()
+        FilterComboBox.SelectedItem = "Show All"
+    End Sub
+    Private Sub SearchButton_Click(sender As Object, e As EventArgs) Handles SearchButton.Click, SearchToolStripMenuItem.Click, SearchContextMenuItem.Click
+        'Handles the search button clicks.  Checks the search text box and loads the display list box based on matched to the searched text.
+        Dim goodData As Boolean
+        Dim searchMatch As Match
+        goodData = False
+        DisplayListBox.Items.Clear()
+        DisplayLabel.Text = String.Empty
+        'Too many items come up when only one character is used.
+        If SearchTextBox.TextLength = 1 Then
+            DisplayLabel.Text = "Please be more specific."
+            Exit Sub
+        ElseIf SearchTextBox.Text = "zzz" Then
+            Me.Close()
+        End If
+        'Matches only occur on the front end of words in the strings, instead of pulling matches out of the center of words.
+        For a = 0 To UBound(finalarray2) - 1
+            searchMatch = Regex.Match(finalarray2(a, 0), "\b" & SearchTextBox.Text, RegexOptions.IgnoreCase)
+            If searchMatch.Success = True Then
+                DisplayListBox.Items.Add(finalarray2(a, 0))
+                goodData = True
+            End If
+        Next
+        If goodData = False Then
+            DisplayLabel.Text = $"Sorry, no matches for {SearchTextBox.Text}"
+        End If
+        DisplayListBox.Items.Remove("  ")
     End Sub
     Private Sub DisplayListBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles DisplayListBox.SelectedIndexChanged
-        'deselect previously selected item if something in the list box is selected
-        ComboBox1.SelectedIndex = -1
-        'without this next if, this sub, and all its instructions, would be entered if
-        'line x was carried out from the next sub
-        If DisplayListBox.SelectedIndex <> -1 Then
-            Dim aisleNumber2 As Integer = 0
-            Dim itemNumber2 As Integer = 0
-            Select Case DisplayListBox.SelectedIndex
-                'determine the aisle number & item number based on the index #
-                Case <= 4
-                    'first 5 index numbers are aisle 1
-                    aisleNumber2 = 1
-                    'item number counts by 1, up to 5
-                    itemNumber2 = DisplayListBox.SelectedIndex + 1
-                Case >= 10
-                    'last 5 index numbers are aisle 3
-                    aisleNumber2 = 3
-                    itemNumber2 = DisplayListBox.SelectedIndex - 9
-                Case Else
-                    'all other items are aisle 2
-                    aisleNumber2 = 2
-                    itemNumber2 = DisplayListBox.SelectedIndex - 4
-            End Select
-            If aisleNumber2 = 3 Then
-                'add the word game to items in aisle 3
-                DisplayLabel.Text = "The " & DisplayListBox.SelectedItem.ToString &
-                " game can be found on aisle " & aisleNumber2 & " and is " &
-                "item number " & itemNumber2 & "."
-            Else
-                DisplayLabel.Text = "The " & DisplayListBox.SelectedItem.ToString &
-                " can be found on aisle " & aisleNumber2 & " and is " &
-                "item number " & itemNumber2 & "."
-            End If
-        End If
-    End Sub
-    Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
-        'deselect previously selected item if something in the combo box is selected
-        DisplayListBox.SelectedIndex = -1
-        If ComboBox1.SelectedIndex <> -1 Then
-            Dim aisleNumber2 As Integer = 0
-            Dim itemNumber2 As Integer = 0
-            Select Case ComboBox1.SelectedIndex
-                Case <= 4
-                    aisleNumber2 = 1
-                    itemNumber2 = ComboBox1.SelectedIndex + 1
-                Case >= 10
-                    aisleNumber2 = 3
-                    itemNumber2 = ComboBox1.SelectedIndex - 9
-                Case Else
-                    aisleNumber2 = 2
-                    itemNumber2 = ComboBox1.SelectedIndex - 4
-            End Select
-            If aisleNumber2 = 3 Then
-                DisplayLabel.Text = "The " & ComboBox1.SelectedItem.ToString &
-                " game can be found on aisle " & aisleNumber2 & " and is " &
-                "item number " & itemNumber2 & "."
-            Else
-                DisplayLabel.Text = "The " & ComboBox1.SelectedItem.ToString &
-                " can be found on aisle " & aisleNumber2 & " and is " &
-                "item number " & itemNumber2 & "."
-            End If
-        End If
-    End Sub
-    Private Sub SearchButton_Click(sender As Object, e As EventArgs) Handles SearchButton.Click, SearchToolStripMenuItem.Click
-        'deselect all items in combo box and list box
-        DisplayListBox.SelectedIndex = -1
-        ComboBox1.SelectedIndex = -1
-        If SearchTextBox.Text = "" Then
-            'if blank, alert user
-            MsgBox("Please enter something to search for.")
-        ElseIf SearchTextBox.Text = "zzz" Or SearchTextBox.Text = "ZZZ" Then
-            'secret code to close program
-            Me.Close()
-        ElseIf SearchTextBox.Text.Length < 3 Then
-            'must enter at least 3 characters when searching to increase
-            'accuracy when searching for an item
-            MsgBox("Please enter at least 3 characters in the search box.")
-        Else
-            'search items here
-            Dim itemFound As Boolean = False
-            'use nested for loop to search each cell of the array
-            For i = 0 To 2 'aisle number
-                For j = 0 To 4 'item number
-                    'check if the search text is part of the string in the cell
-                    If (itemArray(i, j).ToLower).Contains(SearchTextBox.Text.ToLower) Then
-                        'if found, display item and location
-                        If i = 2 Then
-                            'for aisle 3 items, add the word "game"
-                            DisplayLabel.Text = "The " & itemArray(i, j) & " game can" &
-                            " be found on aisle #" & (i + 1).ToString & " And " &
-                            "Is item #" & (j + 1).ToString & "."
-                        Else
-                            DisplayLabel.Text = "The " & itemArray(i, j) & " can" &
-                            " be found on aisle " & (i + 1).ToString & " And " &
-                            "Is item #" & (j + 1).ToString & "."
-                        End If
-                        'since item is found, assign i and j to final values to
-                        'avoid wasting time checking other cells
-                        i = 2
-                        j = 4
-                        itemFound = True
-
-                    End If
-                Next
+        'This sub loads the display label with information, based on the users choice.
+        For a = 0 To 255
+            For b = 0 To 2
+                If DisplayListBox.SelectedItem.ToString = finalarray2(a, b) Then
+                    DisplayLabel.Text = "You will find " & finalarray2(a, b) & " on aisle " &
+                        finalarray2(a, b + 1) & " with the " & finalarray2(a, b + 2)
+                End If
             Next
-            If itemFound = False Then
-                'notify user the item wasn't found
-                MsgBox("We don't have that item in our store. Check our website " &
-                "for more options or try searching a different name.")
-            End If
+        Next
+    End Sub
+    Private Sub RadioButton_CheckedChanged(sender As Object, e As EventArgs) Handles AisleRadioButton.CheckedChanged, CategoryRadioButton.CheckedChanged
+        'This sub watches for the radio buttons to change, then storts the filter combox box based on the users selection.
+        If AisleRadioButton.Checked = True Then
+            FilterComboBox.Items.Clear()
+            FilterComboBox.Items.Add("Show All")
+            FilterComboBox.Items.Add("Choose Aisle...")
+            FilterComboBox.SelectedItem = "Choose Aisle..."
+            For t = 0 To UBound(sortedLocations)
+                FilterComboBox.Items.Add(sortedLocations(t))
+            Next
+        Else
+            FilterComboBox.Items.Clear()
+            FilterComboBox.Items.Add("Show All")
+            FilterComboBox.Items.Add("Choose Category...")
+            FilterComboBox.SelectedItem = "Choose Category..."
+            For l = 0 To UBound(sortedLocations)
+                FilterComboBox.Items.Add(sortedCategories(l))
+            Next
         End If
+        FilterComboBox.Items.Remove("  ")
+    End Sub
+    Private Sub FilterComboBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles FilterComboBox.SelectedIndexChanged
+        'This sub watches for the users selection within the filter combo box, adjusts the display list box accordingly.
+        FilterComboBox.SelectedItem.ToString()
+        DisplayListBox.Items.Clear()
+        For a = 0 To 255
+            If FilterComboBox.SelectedItem.ToString() = "Show All" Then
+                DisplayListBox.Items.Add(finalarray2(a, 0))
+            End If
+            For b = 0 To 2
+                If FilterComboBox.SelectedItem.ToString() = finalarray2(a, b) Then
+                    DisplayListBox.Items.Add(finalarray2(a, 0))
+                End If
+            Next
+        Next
+        DisplayListBox.Items.Remove("  ")
+    End Sub
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        'Timer sub, for the splash screen.
+        Timer1.Stop()
+        'SplashScreenForm.Hide()
+    End Sub
+    Sub LocationSorter()
+        Dim locations(UBound(finalarray2)) As String
+
+        For a = 0 To UBound(finalarray2)
+            locations(a) = finalarray2(a, 1)
+        Next
+        Dim preDedupe As String = String.Join(",", locations)
+        Dim dedupe As String = DeDupeinator(preDedupe)
+        sortedLocations = Regex.Split(dedupe, ",")
+        Array.Sort(sortedLocations)
+        Console.Read()
+    End Sub
+    Sub CategorySorter()
+        Dim categories(UBound(finalarray2)) As String
+
+        For a = 0 To UBound(finalarray2)
+            categories(a) = finalarray2(a, 2)
+        Next
+        Dim preDedupe As String = String.Join(",", categories)
+        Dim dedupe As String = DeDupeinator(preDedupe)
+        sortedCategories = Regex.Split(dedupe, ",")
+        Array.Sort(sortedCategories)
+        Console.Read()
     End Sub
     Private Sub AboutTopMenuItem_Click(sender As Object, e As EventArgs) Handles AboutTopMenuItem.Click
-        MsgBox("Car Rental program Beta Version 1.0.001" & vbNewLine _
-               & "Template provided by Timothy Rossiter" & vbNewLine _
-               & "Code by Doyle Shaw" & vbNewLine _
-               & "Fall 2020" & vbNewLine _
-               & "RCET0265" & vbNewLine _
-               & "In association with The Krusty Krab.")
+        AboutForm.Size = Me.Size
+        AboutForm.Show()
     End Sub
+    Function DeDupeinator(ByVal sInput As String, Optional ByVal sDelimiter As String = ",") As String
+        'This function is used for the location and category sorters to remove duplicates and return the individual instances once each.
+        Dim varietySection As String
+        Dim sTemp As String
+
+        For Each varietySection In Split(sInput, sDelimiter)
+            If InStr(1, sDelimiter & sTemp & sDelimiter, sDelimiter & varietySection & sDelimiter, vbTextCompare) = 0 Then
+                sTemp = sTemp & sDelimiter & varietySection
+            End If
+        Next varietySection
+        DeDupeinator = Mid(sTemp, Len(sDelimiter) + 1)
+    End Function
     Private Sub ExitButton_Click(sender As Object, e As EventArgs) Handles ExitButton.Click, ExitToolStripMenuItem.Click
         'exit button is hidden from user. only exists to be assigned for cancel button
         Me.Close()
