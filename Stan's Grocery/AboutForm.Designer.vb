@@ -44,7 +44,7 @@ Partial Class AboutForm
         Me.ClientSize = New System.Drawing.Size(490, 165)
         Me.Controls.Add(Me.Label1)
         Me.Name = "AboutForm"
-        Me.Text = "Form1"
+        Me.Text = "About the Program"
         Me.ResumeLayout(False)
 
     End Sub

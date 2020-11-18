@@ -65,6 +65,16 @@ Namespace My.Resources
         End Property
         
         '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Public Shared ReadOnly Property Creepy_Apple() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("Creepy_Apple", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Looks up a localized string similar to &quot;$$ITMAsparagus&quot;,&quot;##LOC0&quot;,&quot;%%CATFresh Vegetables&quot;
         '''&quot;$$ITMBroccoli&quot;,&quot;##LOC0&quot;,&quot;%%CATFresh Vegetables&quot;
         '''&quot;$$ITMCarrots&quot;,&quot;##LOC0&quot;,&quot;%%CATFresh Vegetables&quot;

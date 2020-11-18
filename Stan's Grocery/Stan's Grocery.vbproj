@@ -123,6 +123,9 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource1.Designer.vb</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="SplashScreenForm.resx">
+      <DependentUpon>SplashScreenForm.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="StansGroceryForm.resx">
       <DependentUpon>StansGroceryForm.vb</DependentUpon>
     </EmbeddedResource>
@@ -147,6 +150,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Grocery.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Creepy Apple.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

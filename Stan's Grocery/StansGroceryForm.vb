@@ -13,14 +13,6 @@ Public Class StansGroceryForm
     Dim finalarray2(255, 2), sortedLocations(16), sortedCategories(23) As String
 
     Public Sub StansGroceryForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'This group of text handles the initial splash screen.
-        Timer1.Start()
-        SplashScreenForm.BackgroundImageLayout = ImageLayout.Stretch
-        'SplashScreenForm.BackgroundImage = My.Resources.stansDraft2
-        'SplashScreenForm.Size = Me.Size
-        'SplashScreenForm.Show()
-        Me.Show()
-
         Dim sizer, foodSizer, locationSizer, categorySizer As Integer
         Dim match As Match
         Dim initialSplit As String = Regex.Replace(My.Resources.Resource1.Grocery, "/", "Ω")
@@ -28,14 +20,19 @@ Public Class StansGroceryForm
         Dim initialArrayString As String = String.Join("", initialArray)
         Dim alphabetizer() As String
         alphabetizer = Regex.Split(initialArrayString, vbLf)
-        array.Sort(alphabetizer)
+        Array.Sort(alphabetizer)
         Dim sortedStr As String = String.Join("", alphabetizer)
         Dim array1() As String
 
+        'This group of text handles the initial splash screen.
+        Timer1.Start()
+        SplashScreenForm.BackgroundImageLayout = ImageLayout.Stretch
+        SplashScreenForm.BackgroundImage = My.Resources.Resource1.Creepy_Apple
+        'Sets the aisle radio button to be selected by default
+        'FilterByAisleRadioButton.Select()
         'Uses a zero width positive lookbehind assertion to split the array back 
         'into Single lines to prepare for matching
         array1 = Regex.Split(sortedStr, "(?=ITM)|(?=LOC)|(?=CAT)")
-
         'This section sizes the array columns and loads them with information from the first arr.
         For i = 0 To UBound(array1)
             match = Regex.Match(array1(i), "ITM")
@@ -126,9 +123,9 @@ Public Class StansGroceryForm
             Next
         Next
     End Sub
-    Private Sub RadioButton_CheckedChanged(sender As Object, e As EventArgs) Handles AisleRadioButton.CheckedChanged, CategoryRadioButton.CheckedChanged
+    Private Sub RadioButton_CheckedChanged(sender As Object, e As EventArgs) Handles FilterByAisleRadioButton.CheckedChanged, FilterByCategoryRadioButton.CheckedChanged
         'This sub watches for the radio buttons to change, then storts the filter combox box based on the users selection.
-        If AisleRadioButton.Checked = True Then
+        If FilterByAisleRadioButton.Checked = True Then
             FilterComboBox.Items.Clear()
             FilterComboBox.Items.Add("Show All")
             FilterComboBox.Items.Add("Choose Aisle...")
@@ -166,7 +163,7 @@ Public Class StansGroceryForm
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         'Timer sub, for the splash screen.
         Timer1.Stop()
-        'SplashScreenForm.Hide()
+        Me.Show()
     End Sub
     Sub LocationSorter()
         Dim locations(UBound(finalarray2)) As String
@@ -208,8 +205,4 @@ Public Class StansGroceryForm
         Next varietySection
         DeDupeinator = Mid(sTemp, Len(sDelimiter) + 1)
     End Function
-    Private Sub ExitButton_Click(sender As Object, e As EventArgs) Handles ExitButton.Click, ExitToolStripMenuItem.Click
-        'exit button is hidden from user. only exists to be assigned for cancel button
-        Me.Close()
-    End Sub
 End Class
