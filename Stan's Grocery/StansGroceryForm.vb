@@ -28,8 +28,7 @@ Public Class StansGroceryForm
         Timer1.Start()
         SplashScreenForm.BackgroundImageLayout = ImageLayout.Stretch
         SplashScreenForm.BackgroundImage = My.Resources.Resource1.Creepy_Apple
-        'Sets the aisle radio button to be selected by default
-        'FilterByAisleRadioButton.Select()
+
         'Uses a zero width positive lookbehind assertion to split the array back 
         'into Single lines to prepare for matching
         array1 = Regex.Split(sortedStr, "(?=ITM)|(?=LOC)|(?=CAT)")
@@ -83,6 +82,8 @@ Public Class StansGroceryForm
         finalarray2 = finalArray
         LocationSorter()
         CategorySorter()
+        'Sets the aisle radio button to be selected by default
+        FilterByAisleRadioButton.Checked = True
         FilterComboBox.SelectedItem = "Show All"
     End Sub
     Private Sub SearchButton_Click(sender As Object, e As EventArgs) Handles SearchButton.Click, SearchToolStripMenuItem.Click, SearchContextMenuItem.Click
@@ -143,6 +144,7 @@ Public Class StansGroceryForm
             Next
         End If
         FilterComboBox.Items.Remove("  ")
+
     End Sub
     Private Sub FilterComboBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles FilterComboBox.SelectedIndexChanged
         'This sub watches for the users selection within the filter combo box, adjusts the display list box accordingly.
