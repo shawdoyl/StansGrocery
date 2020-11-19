@@ -24,12 +24,11 @@ Public Class StansGroceryForm
         Dim sortedStr As String = String.Join("", alphabetizer)
         Dim array1() As String
 
-        'This group of text handles the initial splash screen.
+        'This group of code handles the initial splash screen.
         Timer1.Start()
         SplashScreenForm.BackgroundImageLayout = ImageLayout.Stretch
         SplashScreenForm.BackgroundImage = My.Resources.Resource1.Creepy_Apple
-
-        'Uses a zero width positive lookbehind assertion to split the array back 
+        'Uses a zero width positive look behind assertion to split the array back 
         'into Single lines to prepare for matching
         array1 = Regex.Split(sortedStr, "(?=ITM)|(?=LOC)|(?=CAT)")
         'This section sizes the array columns and loads them with information from the first arr.
@@ -144,7 +143,6 @@ Public Class StansGroceryForm
             Next
         End If
         FilterComboBox.Items.Remove("  ")
-
     End Sub
     Private Sub FilterComboBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles FilterComboBox.SelectedIndexChanged
         'This sub watches for the users selection within the filter combo box, adjusts the display list box accordingly.
